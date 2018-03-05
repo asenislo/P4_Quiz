@@ -106,6 +106,7 @@ exports.testComand = (rl, id) =>{
 				if (respSEspacio.toLowerCase() === quiz.answer.toLowerCase()){
 					log('Respuesta :');
 					biglog('CORRECTA', 'green');
+					log('Respuesta correcta!');
 				}else{
 					log('Respuesta :');
 					biglog('INCORRECTA', 'red');
