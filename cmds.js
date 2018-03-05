@@ -109,6 +109,7 @@ exports.testComand = (rl, id) =>{
 				}else{
 					log('Respuesta :');
 					biglog('INCORRECTA', 'red');
+					log('Respuesta incorrecta, inténtelo de nuevo:');
 				}
 				rl.prompt();
 			});			
