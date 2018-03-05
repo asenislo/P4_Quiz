@@ -84,12 +84,39 @@ exports.showComand = (rl, id) =>{
 
 /**
 * Prueba el quiz, hace una pregunta a la que debemos contestar
-* 
+* @param rl
 * @param id CLave del quiz a probar
 */
 exports.testComand = (rl, id) =>{
-	log('Probar el quiz indicado.', 'red');
-	rl.prompt();
+	if (typeof id === "undefined"){
+		errorlog(`Falta el parámetro id.`);
+		rl.prompt();
+	}else{
+		try{
+			const quiz = model.getByIndex(id);
+			console.log(colorize(`${quiz.question}?`, 'red'));
+			rl.question('Introduzca la respuesta: ', answer => {
+
+				var respLimpia = answer.replace(/[^a-zA-Z]+/g,' '); //Quita simbolos
+				var respSEspacio = respLimpia.replace(/\s+/g,' '); //Sin espacios
+				var respToComand = respSEspacio.toLowerCase(); //mayus a minus
+
+				var respCorrecta = quiz.answer.toLowerCase();
+
+				if (respSEspacio.toLowerCase() === quiz.answer.toLowerCase()){
+					log('Respuesta :');
+					biglog('CORRECTA', 'green');
+				}else{
+					log('Respuesta :');
+					biglog('INCORRECTA', 'red');
+				}
+				rl.prompt();
+			});			
+		}catch (error){
+			errorlog(error.message);
+			rl.prompt();
+    	}
+    }	
 };
 
 /**
