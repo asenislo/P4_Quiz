@@ -99,9 +99,9 @@ exports.testComand = (rl, id) =>{
 
 				var respLimpia = answer.replace(/[^a-zA-Z]+/g,' '); //Quita simbolos
 				var respSEspacio = respLimpia.replace(/\s+/g,' '); //Sin espacios
-				var respToComand = respSEspacio.toLowerCase(); //mayus a minus
+				//var respToComand = respSEspacio.toLowerCase(); //mayus a minus
 
-				var respCorrecta = quiz.answer.toLowerCase();
+				//var respCorrecta = quiz.answer.toLowerCase();
 
 				if (respSEspacio.toLowerCase() === quiz.answer.toLowerCase()){
 					log('Respuesta :');
