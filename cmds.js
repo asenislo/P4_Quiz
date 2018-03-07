@@ -153,7 +153,7 @@ exports.playComand = rl =>{
 					score = score +1;
 
 					biglog('CORRECTA', 'green');
-					log('Respuesta correcta, tu número de aciertos es ' +score+, 'green');
+					log('Respuesta correcta, tu número de aciertos es ' +score+ 'green');
 					playOne();
 				}
 			}
