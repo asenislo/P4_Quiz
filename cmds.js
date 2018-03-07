@@ -106,7 +106,7 @@ exports.testComand = (rl, id) =>{
 				if (respSEspacio.toLowerCase() === quiz.answer.toLowerCase()){
 					log('Respuesta :');
 					biglog('CORRECTA', 'green');
-					log('Respuesta correcta!');
+					log('Respuesta correcta !');
 				}else{
 					log('Respuesta :');
 					biglog('INCORRECTA', 'red');
@@ -126,8 +126,42 @@ exports.testComand = (rl, id) =>{
 * Ganas si contestas todo bien
 */
 exports.playComand = rl =>{
-	log('Jugar', 'red');
-	rl.prompt();
+	let score = 0;
+	let toBeResolved = [];
+	let allQuizzes = model.getAll(); // recuperamos de model todas las preguntas que hay en el quiz para interactuar con ellas
+
+	//enumera el toBeResolved para darle un inteficador a cada pregunta
+	for(let i = 0; i< model.lenght(); i++){
+		toBeResolved[i] = i;
+	}
+
+	const playOne() = () => {
+		if (toBeResolved === 0) {
+			log('Quiz finalizado, tu puntuación es: ', 'green');
+			biglog(score, 'magenta');
+			rl.prompt();
+		}else {
+			let aleatorio = Math.random()*toBeResolved.lenght;
+			let id = Math.floor(aleatorio);
+			toBeResolved.splice(id,1); // empiezas a borrar en la posicion id y borras un elemento (el de la pos id en este caso) de toBeresolved
+			let quizRun = allQuizzes[id]; //quiz aleatorio con identif id que querremos que se conteste y despues eliminar
+			//allQuizzes.splice(id, 1); //eliminamos el quiz que ya se ha ejecutado
+			rl.question(colorize(quizRun.question, 'red'), resp =>{
+				var respuestaTecleada = resp.trim();
+				var respuestaQuiz = quizRun.answer.trim();
+				if (respuestaTecleada.toLowerCase() === respuestaQuiz.toLowerCase()) {
+					score = score +1;
+
+					biglog('CORRECTA', 'green');
+					log('Respuesta correcta, tu número de aciertos es ' +score+, 'green');
+					playOne();
+				}
+			}
+
+		}
+
+	}
+
 };
 
 /**
