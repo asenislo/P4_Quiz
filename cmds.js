@@ -135,7 +135,7 @@ exports.playComand = rl =>{
 		toBeResolved[i] = i;
 	}
 
-	const playOne() = () => {
+	const playOne = () => {
 		if (toBeResolved === 0) {
 			log('Quiz finalizado, tu puntuación es: ', 'green');
 			biglog(score, 'magenta');
