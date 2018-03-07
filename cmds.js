@@ -131,7 +131,7 @@ exports.playComand = rl =>{
 	let allQuizzes = model.getAll(); // recuperamos de model todas las preguntas que hay en el quiz para interactuar con ellas
 
 	//enumera el toBeResolved para darle un inteficador a cada pregunta
-	for(let i = 0; i< model.lenght(); i++){
+	for(let i = 0; i< model.count(); i++){
 		toBeResolved[i] = i;
 	}
 
@@ -155,13 +155,18 @@ exports.playComand = rl =>{
 					biglog('CORRECTA', 'green');
 					log('Respuesta correcta, tu número de aciertos es ' +score+ 'green');
 					playOne();
+				}else {
+					biglog('INCORRECTA', 'red');
+					log('Fin del juego, su puntuaciónes:', 'blue' );
+					biglog(score,'magenta');
+					rl.prompt();
 				}
-			}
+			});
 
 		}
 
 	}
-
+	playOne();
 };
 
 /**
