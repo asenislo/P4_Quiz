@@ -128,14 +128,11 @@ exports.testComand = (rl, id) =>{
 exports.playComand = rl =>{
 	let score = 0;
 	let toBeResolved = [];
-	//let allQuizzes = model.getAll(); // recuperamos de model todas las preguntas que hay en el quiz para interactuar con ellas
+	let allQuizzes = model.getAll(); // recuperamos de model todas las preguntas que hay en el quiz para interactuar con ellas
 	toBeResolved.lenght = model.count();
 	let longToBeResolved = toBeResolved.length;
-	if (toBeResolved.lenght === 0) {
-			log('Quiz finalizado, tu puntuación es: ', 'green');
-			biglog(score, 'magenta');
-			rl.prompt();
-	}
+
+	
 	//enumera el toBeResolved para darle un inteficador a cada pregunta
 	for(let i = 0; i< model.count(); i++){
 		toBeResolved[i] = i;
@@ -143,10 +140,14 @@ exports.playComand = rl =>{
 
 	const playOne = () => {
 		
-		
+		if (toBeResolved.lenght === 0) {
+			log('Quiz finalizado, tu puntuación es: ', 'green');
+			biglog(score, 'magenta');
+			rl.prompt();
+		}else{
 
 			let id = Math.floor(Math.random()*longToBeResolved); // .
-			var quizRun =toBeResolved[id];
+			var quizRun = toBeResolved[id];
 			const quiz = model.getByIndex(id);
 			//let aleatorio = Math.random()*toBeResolved.lenght;
 			//let id = Math.floor(aleatorio);
@@ -156,6 +157,8 @@ exports.playComand = rl =>{
 			//allQuizzes.splice(id, 1); //eliminamos el quiz que ya se ha ejecutado
 			//rl.question(console.log(colorize(`${quizRun.question}?`, 'red')), resp =>{
 			log(`¿ ${quiz.question}? `);
+			allQuizzes.splice(id, 1);
+
 			rl.question(colorize('Introduzca la respuesta: ', 'red'), answer =>{
 				var respuestaTecleada = answer.toLowerCase().trim();
 				var respuestaQuiz = quiz.answer.toLowerCase().trim();
@@ -165,14 +168,15 @@ exports.playComand = rl =>{
 					score ++;
 					biglog('CORRECTA', 'green');
 					log(`Respuesta correcta, tu número de aciertos es ${score}`);
-					if(score < longToBeResolved){
-						toBeResolved.splice(id,1);
-						rl.prompt();
-						playOne();
-					}else{
-						log('TOdas las respuestas son correctas');
-						rl.prompt();
-					}
+						//if(score < longToBeResolved){
+							//toBeResolved.splice(id,1);
+
+							//rl.prompt();
+							playOne();
+						//}else{
+						//	log('Todas las respuestas son correctas');
+							//rl.prompt();
+						//}
 					
 				}else {
 					biglog('INCORRECTA', 'red');
@@ -181,8 +185,7 @@ exports.playComand = rl =>{
 					rl.prompt();
 				}
 			});
-
-		
+		}
 
 	}
 	playOne();
