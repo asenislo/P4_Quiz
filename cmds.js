@@ -149,15 +149,13 @@ exports.playComand = rl =>{
 			let id = Math.floor(Math.random()*longToBeResolved); // .
 			var quizRun = toBeResolved[id];
 			const quiz = model.getByIndex(id);
-			//let aleatorio = Math.random()*toBeResolved.lenght;
-			//let id = Math.floor(aleatorio);
 			//toBeResolved.splice(id,1); // empiezas a borrar en la posicion id y borras un elemento (el de la pos id en este caso) de toBeresolved
 			//let quizRun = allQuizzes[id]; //quiz aleatorio con identif id que querremos que se conteste y despues eliminar
 
 			//allQuizzes.splice(id, 1); //eliminamos el quiz que ya se ha ejecutado
 			//rl.question(console.log(colorize(`${quizRun.question}?`, 'red')), resp =>{
 			log(`¿ ${quiz.question}? `);
-			allQuizzes.splice(id, 1);
+			//allQuizzes.splice(id, 1);
 
 			rl.question(colorize('Introduzca la respuesta: ', 'red'), answer =>{
 				var respuestaTecleada = answer.toLowerCase().trim();
@@ -169,10 +167,8 @@ exports.playComand = rl =>{
 					biglog('CORRECTA', 'green');
 					log(`Respuesta correcta, tu número de aciertos es ${score}`);
 						//if(score < longToBeResolved){
-							//toBeResolved.splice(id,1);
-
-							//rl.prompt();
-							playOne();
+					toBeResolved.splice(id,1);
+					playOne();
 						//}else{
 						//	log('Todas las respuestas son correctas');
 							//rl.prompt();
