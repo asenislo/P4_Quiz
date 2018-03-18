@@ -1,5 +1,5 @@
 
-
+const Sequelize = require('sequelize');
 const {models} = require('./model'); //con los corchetes ya tengo sequelize
 const {log, biglog, errorlog, colorize} = require("./out");
 
@@ -33,6 +33,16 @@ exports.quitComand = rl =>{
 	rl.close();
 };
 
+
+
+const makeQuestion = (rl, text) => {
+  return new Sequelize.Promise((resolve, reject) => {
+    rl.question(colorize(text, 'red'), answer => {
+      resolve(answer.trim());
+    });
+  });
+};
+
 /**
 *Añade un quiz nuevo
 *Al añadirlo añades pregunta y respuesta
@@ -45,15 +55,30 @@ exports.quitComand = rl =>{
 * @param rl Objeto readline usado para implementar el CLI
 */
 exports.addComand = rl =>{
-	rl.question(colorize('Introduzca una pregunta:', 'red'), question => {
-		rl.question(colorize('Introduzca la respuesta:', 'red'), answer => { // llama a question con ese string de introduzca la respuesta, luego se llama a la funcion callback de , answer=> y se ejecuta la funcion que esta descrita debajo
-			model.add(question, answer);
-			log(` ${colorize('Se ha añadido', 'magenta')}: ${question} ${colorize('=>', 'magenta')} ${answer}`);
-			rl.prompt(); //Aqui y no despues porque sino se podria salir antes de acabar
-		});
-	});
-	
-};
+  makeQuestion(rl, ' Introduzca una pregunta: ') //promesa que hasta que el usuario no haya tecleado la pregunta que quiere hacer no finaliza
+ 	  .then(q => {
+ 	    return makeQuestion(rl, ' Introduzca la respuesta ') //return de la nueva promesa, a es el valor que deveuelve
+ 	    .then(a => { //anidado para poder acceder al texto de la pregunta q, a es la respuesta
+ 	      return {question: q, answer: a};
+ 	    });
+ 	  })
+ 	  .then(quiz => {
+ 	    return models.quiz.create(quiz); //objeto que quiero crear
+ 	  })
+ 	  .then((quiz) => { //si se vumple pasa a esta promesa y entonces imprime mensaje
+ 	    log(` ${colorize('Se ha añadido', 'magenta')}: ${quiz.question} ${colorize('=>', 'magenta')} ${quiz.answer}`)
+ 	  })
+ 	  .catch(Sequelize.ValidationError, error => { //si es erroneo pasa a esta parte
+ 	    errorlog('El quiz es erroneo:');
+ 	    error.errors.forEach(({message}) => errorlog(message));
+ 	  })
+ 	  .catch(error => {
+ 	    errorlog(error.message);
+ 	  })
+ 	  .then(() => { // si al dinal todo va bien vuelvo a sacar el prompr
+ 	    rl.prompt();
+ 	  });
+ 	};
 
 /**
 *Lista de los quizzes existentes
@@ -77,11 +102,11 @@ exports.listComand = rl => {
 
 
  const validateId = id => { //pasa por parametro id
-   return new Promise((resolve,reject) => {
+   return new Sequelize.Promise((resolve,reject) => {
      if (typeof id === "undefined"){
        reject(new Error(`Falta el parámetro <id>.`));
      } else {
-       id = parseInt(id); //coge la parte entera y rechaza lo demas
+       id = parseInt(id); //coge la pa rte entera y rechaza lo demas
        if (Number.isNaN(id)){
          reject(new Error(`El valo r del parámetro <id> no es un número.`));
 
@@ -224,16 +249,14 @@ exports.playComand = rl =>{
 * @param id Clave del quiz que va a borrar
 */
 exports.deleteComand = (rl, id) =>{
-	if (typeof id === "undefined"){
-		errorlog(`Falta el parámetro id.`);
-	}else{
-		try{
-			model.deleteByIndex(id); //intento acceder a la pregunta en posicion id y me lo guardo en quiz
-		}catch(error){
-			errorlog(error.message);
-		}
-	}
-	rl.prompt();
+	validateId(id)
+	.then(id => models.quiz.destroy({where: {id}})) //destroy con parametro que quiero destruir es el parametro ide de where
+	.catch(error => {
+	  errorlog(error.message);
+	})
+	.then(() => {
+	  rl.prompt();
+	});
 };
 
 /**
@@ -243,26 +266,40 @@ exports.deleteComand = (rl, id) =>{
 * @param id Clave del quiz a editar
 */
 exports.editComand = (rl, id) =>{
-	if (typeof id === "undefined"){
-		errorlog(`Falta el parámetro id.`);
-		rl.prompt();
-	}else{
-		try{
-			const quiz = model.getByIndex(id); //ir al modelo y coger la question que pida
-			process.stdout.isTTY && setTimeout(() => {rl.write(quiz.question)},0); // 0 no quiero esperar nada, antes de poner la pregunta, yo ya escribo en la pregunta
-			rl.question(colorize('Introduzca una pregunta:', 'red'), question => {
-				process.stdout.isTTY && setTimeout(() => {rl.write(quiz.answer)},0);
-				rl.question(colorize('Introduzca la respuesta:', 'red'), answer => { // llama a question con ese string de introduzca la respuesta, luego se llama a la funcion callback de , answer=> y se ejecuta la funcion que esta descrita debajo
-					model.update(id, question, answer);
-					log(` Se ha cambiado el quiz ${colorize(id, 'magenta')} por: ${question} ${colorize('=>', 'magenta')} ${answer}`);
-					rl.prompt();
-				});
-			});
-		}catch (error){
-			errorlog(error.message);
-			rl.prompt();
-		}
-	}
+	validateId(id) //promesa para validar que me guata id
+   .then(id => models.quiz.findById(id)) //promesa dondebusco la pregunta que tengo que editar por su id
+   .then(quiz => {//cuando se cumple la anterior paso como parametro el quiz que se ha encontrado
+     if (!quiz){
+       throw new Error(`No existe un quiz asociado al id=${id}.`);
+     }
+     process.stdout.isTTY && setTimeout(() => {rl.write(quiz.question)}, 0); //detecto si es un TTY, inserto cual es el texto actual de la preg y resp
+     return makeQuestion(rl, ' Introduzca la pregunta: ') //editar texto pregunta
+     .then(q => { //
+       process.stdout.isTTY && setTimeout(() => {rl.write(quiz.answer)}, 0);
+       return makeQuestion(rl, 'Introduzca la respuesta ') //otro makequestion dentro del anterior para que no se pierda cuando aya a indroducir la respesta
+       .then(a => { //texto de la preg en q y en a la resp
+         quiz.question = q; //edito quiz arriba y cambio el .question opor el nuevo valor q de la preg e igual con answer 
+         quiz.answer = a;
+         return quiz;
+       });
+     });
+   })
+   .then(quiz => { //promesa con el quiz ya cambiado
+     return quiz.save(); //lo guardo en ka base de datos
+   })
+   .then(quiz => { //si tiene exito saco mensaje
+     log(`Se ha cambiado el quiz ${colorize(quiz.id, 'magenta')} por: ${quiz.question} ${colorize('=>', 'magenta')} ${quiz.answer}`)
+   })
+    .catch(Sequelize.ValidationError, error => { //coge kos errores de validacion y coge un array con todos los errores y los muestra
+ 	    errorlog('El quiz es erróneo:');
+ 	    error.errors.forEach(({message}) => errorlog(message));
+ 	  })
+ 	  .catch(error => {
+ 	    errorlog(error.message);
+ 	  })
+ 	  .then(() => { //saca el prompt para meter el proximo comandod
+ 	    rl.prompt();
+ 	  });
 };
 
 /**
