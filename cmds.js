@@ -144,39 +144,36 @@ exports.showComand = (rl, id) =>{
 * @param id CLave del quiz a probar
 */
 exports.testComand = (rl, id) =>{
-	if (typeof id === "undefined"){
-		errorlog(`Falta el parámetro id.`);
-		rl.prompt();
-	}else{
-		try{
-			const quiz = model.getByIndex(id);
-			console.log(colorize(`${quiz.question}?`, 'red'));
-			rl.question('Introduzca la respuesta: ', answer => {
+	validateId(id)
+	.then(id => models.quiz.findById(id)) 
+	.then(quiz => { //registro el siguiente codigo y compruebo si la promesa anterior me ha devuelto el quiz adecuado
+      if (!quiz){
+        throw new Error(`No existe un quiz asociado al id=${id}.`);
+      }
+      log(`[${colorize(quiz.id,'magenta')}]: ${quiz.question}: `);
+      return makeQuestion(rl, ' Introduzca la respuesta: ') 
+      .then(a => {
+      	if (quiz.answer.toLowerCase().trim() === a.toLowerCase().trim()){
+      		log("Respuesta incorrecta:");
+      		biglog('CORRECTA', 'green');
+      	}else{
+      		log("Respuesta correcta:");
+      		biglog('INCORRECTA', 'red');
+      	}
 
-				var respLimpia = answer.replace(/[^a-zA-Z]+/g,' '); //Quita simbolos
-				var respSEspacio = respLimpia.replace(/\s+/g,' '); //Sin espacios
-				//var respToComand = respSEspacio.toLowerCase(); //mayus a minus
-
-				//var respCorrecta = quiz.answer.toLowerCase();
-
-				if (respSEspacio.toLowerCase() === quiz.answer.toLowerCase()){
-					log('Respuesta :');
-					biglog('CORRECTA', 'green');
-					log('Respuesta correcta !');
-				}else{
-					log('Respuesta :');
-					biglog('INCORRECTA', 'red');
-					log('Respuesta incorrecta, inténtelo de nuevo:');
-				}
-				rl.prompt();
-			});			
-		}catch (error){
-			errorlog(error.message);
-			rl.prompt();
-    	}
-    }	
-};
-
+      });
+    })
+    .catch(Sequelize.ValidationError, error => { //si es erroneo pasa a esta parte
+ 	    errorlog('El quiz es erroneo:');
+ 	    error.errors.forEach(({message}) => errorlog(message));
+ 	  })
+ 	  .catch(error => {
+ 	    errorlog(error.message);
+ 	  })
+ 	  .then(() => { // si al dinal todo va bien vuelvo a sacar el prompt
+ 	    rl.prompt();
+ 	  });
+ 	};
 /**
 * Arranca todos los quizzes que hay aleatoriamente
 * Ganas si contestas todo bien
