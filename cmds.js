@@ -181,7 +181,7 @@ exports.testComand = (rl, id) =>{
 exports.playComand = rl =>{
 	let score = 0;
 	let toBeResolved = [];
-	let allQuizzes = model.getAll(); // recuperamos de model todas las preguntas que hay en el quiz para interactuar con ellas
+/*  let allQuizzes = model.getAll(); // recuperamos de model todas las preguntas que hay en el quiz para interactuar con ellas
 	toBeResolved.lenght = model.count();
 	let longToBeResolved = toBeResolved.length;
 
@@ -238,6 +238,44 @@ exports.playComand = rl =>{
 
 	}
 	playOne();
+*/
+	const playOne = () => {
+		return new Sequelize.Promise((resolve,reject) => {
+			let longToBeResolved = toBeResolved.length;
+			let id = Math.floor(Math.random()*longToBeResolved); 
+			var quizRun = toBeResolved[id];
+
+			if (toBeResolved.lenght === 0) {
+				log('Quiz finalizado, tu puntuación es: ', 'green');
+				biglog(score, 'magenta');
+				resolve();
+				return;
+			}
+			makeQuestion(rl, colorize(quizRun.question + '? ', 'red'))
+			.then(a => {
+				if(a.toLowerCase().trim() === quizRun.answer.toLowerCase().trim()){
+					score = score +1;
+					toBeResolved.splice(id,1);
+					log(`Respuesta correcta, tu número de aciertos es ${score}`);
+					biglog('CORRECTA', 'green');
+					biglog(score, 'magenta');
+					resolve(playOne());
+				}else{
+					log(`Respuesta incorrecta`);
+					biglog('INCORRECTA', 'red');
+					log('Fin del juego, su puntuaciónes:', 'red' );
+					biglog(score,'magenta');
+					resolve();
+				}
+			});
+		});
+	};
+   models.quiz.findAll()
+        .then(quizzes => {quizzes.forEach(quizRun => {toBeResolved.push(quizRun);});})
+        .then(() => playOne())
+        .then(() => rl.prompt())
+        .catch(err => console.log(err));
+
 };
 
 /**
@@ -297,6 +335,7 @@ exports.editComand = (rl, id) =>{
  	  .then(() => { //saca el prompt para meter el proximo comandod
  	    rl.prompt();
  	  });
+
 };
 
 /**
