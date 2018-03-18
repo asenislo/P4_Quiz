@@ -1,4 +1,6 @@
-const model = require('./model');
+
+
+const {models} = require('./model'); //con los corchetes ya tengo sequelize
 const {log, biglog, errorlog, colorize} = require("./out");
 
 /**
@@ -57,29 +59,58 @@ exports.addComand = rl =>{
 *Lista de los quizzes existentes
 */
 exports.listComand = rl => {
-	model.getAll().forEach((quiz,id) => { //getall devuelve el array y el foreach para recorrer
-		log(` [${ colorize(id, 'magenta')}]: ${quiz.question}`); //imprime por pantalla cada uno de los quizes
+	models.quiz.findAll() //promesa que devuelve todos los quizzes existentes
+	//.then(quizzes => { FUNCION ALTERNATIVA ABAJO
+		//quizzes.forEach(quiz => { //quizzes es un array porque findAll te devuelve un array y en cada interaccion me devuelve un quiz foreach(quiz)
+	     //log(`[${colorize(quiz.id, 'magenta')}]:  ${quiz.question}`); //pongo el campo question que devuelve del quiz que toque
+		//lo de catch de abajo
+	.each(quiz => { // el each ya recorre aca elemento del array = funciones arriba 
+		log(`[${colorize(quiz.id, 'magenta')}]:  ${quiz.question}`); //pongo el campo question que devuelve del quiz que toque
+	})
+	.catch(error => {
+		errorlog(error.message);
+	})
+	.then(() => {
+		rl.prompt();
 	}); 
-	rl.prompt();
 };
 
+
+ const validateId = id => { //pasa por parametro id
+   return new Promise((resolve,reject) => {
+     if (typeof id === "undefined"){
+       reject(new Error(`Falta el parámetro <id>.`));
+     } else {
+       id = parseInt(id); //coge la parte entera y rechaza lo demas
+       if (Number.isNaN(id)){
+         reject(new Error(`El valo r del parámetro <id> no es un número.`));
+
+       } else {
+         resolve(id);
+       }
+     }
+   });
+ };
 /**
 * Muestra el quiz indicado en el parámetro: Pregunta y respuesta
 *
 * @param id CLave del quiz a mostrar
 */
 exports.showComand = (rl, id) =>{
-	if (typeof id === "undefined"){
-		errorlog(`Falta el parámetro id.`);
-	}else{
-		try{
-			const quiz = model.getByIndex(id); //intento acceder a la pregunta en posicion id y me lo guardo en quiz
-			log(` [${ colorize(id, 'magenta')}]: ${quiz.question} ${colorize('=>', 'magenta')} ${quiz.answer}`);
-		}catch(error){
-			errorlog(error.message);
-		}
-	}
-	rl.prompt();
+    validateId(id) //devuelve una promesa
+    .then(id => models.quiz.findById(id)) //si funciona bien ovy a modelo quiz y le paso el id que quiero
+    .then(quiz => { //registro el siguiente codigo y compruebo si la promesa anterior me ha devuelto el quiz adecuado
+      if (!quiz){
+        throw new Error(`No existe un quiz asociado al id=${id}.`);
+      }
+      log(`[${colorize(quiz.id,'magenta')}]: ${quiz.question} ${colorize('=>', 'magenta')} ${quiz.answer}`);
+    })
+    .catch(error => {
+      errorlog(error.message);
+    })
+    .then(() => {
+      rl.prompt();
+    });
 };
 
 /**
