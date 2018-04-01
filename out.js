@@ -24,8 +24,8 @@ const colorize = (msg, color) =>{
 * @param color Color del texto
 * funcion que se llame directamente log y llame a colorize
 */
-const log = (msg, color) =>{
-	console.log(colorize(msg, color));
+const log = (socket, msg, color) =>{
+	socket.write(colorize(msg, color) + "\n"); //\n retorno de carro
 };
 
 
@@ -34,8 +34,8 @@ const log = (msg, color) =>{
 * @param Emsg Texto del mensaje de erros
 * Pone error en rojo, pinta el mensaje de error tambien en rojo detras de dos puntos y como texto de fondo un amarillo brillante
 */
-const errorlog = (emsg) => {
-	console.log(`${colorize("Error", "red")}: ${colorize(colorize(emsg, "red"), "bgYellowBright")}`);
+const errorlog = (socket, emsg) => {
+	socket.write(`${colorize("Error", "red")}: ${colorize(colorize(emsg, "red"), "bgYellowBright")}\n`);
 };
 /**
 *Escribe un mensaje de log grande
@@ -43,8 +43,8 @@ const errorlog = (emsg) => {
 * @param color Color del texto
 * MIsmo metodo que log pero pintandolo con letras grandes (figlet). Llamo a metodo log y lo paso por figlet
 */
-const biglog = (msg, color) =>{
-	log(figlet.textSync(msg, { horizontalLayout: 'full'}), color);
+const biglog = (socket, msg, color) =>{
+	log(socket, figlet.textSync(msg, { horizontalLayout: 'full'}), color);
 };
 
 exports = module.exports = {
